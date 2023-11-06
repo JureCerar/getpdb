@@ -22,14 +22,15 @@ import gzip
 import os
 
 __author__ = "Jure Cerar"
-__date__ = "22 Oct 2023"
-__version__ = "0.1.5"
+__date__ = "06 Nov 2023"
+__version__ = "0.1.6"
 
-""" Retrives molecular structure data from online databases (if possible) """
+""" Retrieves molecular structure data from online databases (if possible) """
 
 # Default file type settings
 FILE_DEFAULT_SMALL = "sdf"
 FILE_DEFAULT_LARGE = "cif"
+SSL_CHECK = True
 
 # Supported databases and file types
 DATABASE_HOSTS = {
@@ -38,6 +39,7 @@ DATABASE_HOSTS = {
     "pubchem": ["sdf", "json", "xml", "asnt"],
     "alphafold": ["cif", "bcif", "pdb"],
 }
+
 
 class CustomFormatter(logging.Formatter):
     """ Custom color logging formatter """
@@ -54,13 +56,14 @@ class CustomFormatter(logging.Formatter):
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
 
+
 def _getpdb(code, type, host) -> list:
     """ Get code from host. Returns file as a list of data """
     if host.lower() == "rcsb":
         # See: https://www.rcsb.org/docs/programmatic-access/file-download-services
         url = f"https://files.rcsb.org/download/{code.upper()}.{type.lower()}.gz"
         logging.info(f"Fetching from '{url}'")
-        response = requests.get(url)
+        response = requests.get(url, verify=SSL_CHECK)
         response.raise_for_status()
         data = gzip.decompress(response.content).decode("ascii").split("\n")
 
@@ -73,7 +76,7 @@ def _getpdb(code, type, host) -> list:
         else:
             url = f"https://files.rcsb.org/ligands/download/{code.upper()}.{type.lower()}"
         logging.info(f"Fetching from '{url}'")
-        response = requests.get(url)
+        response = requests.get(url, verify=SSL_CHECK)
         response.raise_for_status()
         data = response.text.split("\n")
     
@@ -81,7 +84,7 @@ def _getpdb(code, type, host) -> list:
         # See: https://pubchem.ncbi.nlm.nih.gov/docs/pug-rest
         url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/CID/{code}/record/{type.upper()}?record_type=3d"
         logging.info(f"Fetching from '{url}'")
-        response = requests.get(url)
+        response = requests.get(url, verify=SSL_CHECK)
         response.raise_for_status()
         data = response.text.split("\n")
 
@@ -89,7 +92,7 @@ def _getpdb(code, type, host) -> list:
         # See: https://alphafold.ebi.ac.uk/api-docs
         url = f"https://alphafold.ebi.ac.uk/api/prediction/{code.upper()}"
         logging.info(f"Fetching from '{url}'")
-        response = requests.get(url)
+        response = requests.get(url, verify=SSL_CHECK)
         response.raise_for_status()
         meta = response.json()[0]
         if type.lower() == "cif":
@@ -101,7 +104,7 @@ def _getpdb(code, type, host) -> list:
         else:
             raise Exception(f"Invalid file type '{type}'")
         logging.info(f"Fetching from '{url}'")
-        response = requests.get(url)
+        response = requests.get(url, verify=SSL_CHECK)
         response.raise_for_status()
         data = response.text.split("\n")
     
@@ -114,11 +117,11 @@ def _getpdb(code, type, host) -> list:
 def getpdb(code, type=None, path=None):
     """
     DESCRIPTION
-        Retrives molecular structure data from online databases (if possible). 
+        Retrieves molecular structure data from online databases (if possible). 
     USAGE
         getpdb code [ type [, hosts [, path ]]]
     ARGUMENTS
-        code = str: A unique stucture identifier (PDB, CID, UniProt, ...)
+        code = str: A unique structure identifier (PDB, CID, UniProt, ...)
         type = str: File format to fetch. See notes for more info. {default: None}
         path = str: File output directory. 'None' for current dir. {default: None}
     NOTES
@@ -181,7 +184,7 @@ def getpdb(code, type=None, path=None):
 def main():   
     # Define command line arguments
     parser = argparse.ArgumentParser(
-        description="Retrives molecular structure data from online databases (if possible)",
+        description="Retrieves molecular structure data from online databases (if possible)",
         epilog="examples:\n  getpdb 1lyz\n  getpdb P00698 -o cif\n  getpdb 1lyz 2lyz 3lyz -d ./output",
         formatter_class=argparse.RawTextHelpFormatter
     )
@@ -196,7 +199,7 @@ def main():
     )
     parser.add_argument(
         "code", nargs="+",
-        help="unique stucture identifiers (PDB, CID, UniProt, ...)"
+        help="unique structure identifiers (PDB, CID, UniProt, ...)"
     )
     parser.add_argument(
         "-o", dest="type", default=None,
