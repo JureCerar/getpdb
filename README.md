@@ -15,7 +15,7 @@ Type the following in command line:
 ```bash
 git clone https://github.com/JureCerar/getpdb.git
 cd ./getpdb
-python setup.py install
+pip install .
 ```
 
 ## Usage
