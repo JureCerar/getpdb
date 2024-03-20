@@ -1,6 +1,6 @@
 # GetPDB
 
-Python script that retrives molecular structure data from online databases (if possible).
+Python script that retrieves molecular structure data from online databases (if possible).
 
 Script check following databases:
 
@@ -21,12 +21,12 @@ pip install .
 ## Usage
 
 ```text
-usage: getpdb [-h] [-V] [-v] [-o TYPE] [-d DIR] code [code ...]
+usage: getpdb [-h] [-V] [-v] [-o TYPE] [-d DIR] [--no-ssl-verify] code [code ...]
 
-Retrives molecular structure data from online databases (if possible)
+Retrieves molecular structure data from online databases (if possible)
 
 positional arguments:
-  code               unique stucture identifiers (PDB, CID, UniProt, ...)
+  code               unique structure identifiers (PDB, CID, UniProt, ...)
 
 options:
   -h, --help         show this help message and exit
@@ -34,6 +34,7 @@ options:
   -v, --verbose      provide verbose output
   -o TYPE            output file type (supported file types depend on host)
   -d DIR, --dir DIR  path to a directory that will store the files
+  --no-ssl-verify    disable SSL verification when making requests
 
 examples:
   getpdb 1lyz
@@ -55,7 +56,7 @@ Also take a look at other similar github projects:
 
 This program is licensed under the __GNU General Public License v3.0__
 
-Copyright (C) 2023 [Jure Cerar](https://github.com/JureCerar)
+Copyright (C) 2023-2024 [Jure Cerar](https://github.com/JureCerar)
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 

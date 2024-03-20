@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # 
-# Copyright (C) 2023 Jure Cerar
+# Copyright (C) 2023-2024 Jure Cerar
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,17 +20,17 @@ import logging
 import requests
 import gzip
 import os
+import warnings
 
 __author__ = "Jure Cerar"
-__date__ = "06 Nov 2023"
-__version__ = "0.1.6"
+__date__ = "20 Mar 2024"
+__version__ = "0.2.0"
 
 """ Retrieves molecular structure data from online databases (if possible) """
 
 # Default file type settings
 FILE_DEFAULT_SMALL = "sdf"
 FILE_DEFAULT_LARGE = "cif"
-SSL_CHECK = True
 
 # Supported databases and file types
 DATABASE_HOSTS = {
@@ -57,13 +57,13 @@ class CustomFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-def _getpdb(code, type, host) -> list:
+def _getpdb(code, type, host, verify=True) -> list:
     """ Get code from host. Returns file as a list of data """
     if host.lower() == "rcsb":
         # See: https://www.rcsb.org/docs/programmatic-access/file-download-services
         url = f"https://files.rcsb.org/download/{code.upper()}.{type.lower()}.gz"
         logging.info(f"Fetching from '{url}'")
-        response = requests.get(url, verify=SSL_CHECK)
+        response = requests.get(url, verify=verify)
         response.raise_for_status()
         data = gzip.decompress(response.content).decode("ascii").split("\n")
 
@@ -76,7 +76,7 @@ def _getpdb(code, type, host) -> list:
         else:
             url = f"https://files.rcsb.org/ligands/download/{code.upper()}.{type.lower()}"
         logging.info(f"Fetching from '{url}'")
-        response = requests.get(url, verify=SSL_CHECK)
+        response = requests.get(url, verify=verify)
         response.raise_for_status()
         data = response.text.split("\n")
     
@@ -84,7 +84,7 @@ def _getpdb(code, type, host) -> list:
         # See: https://pubchem.ncbi.nlm.nih.gov/docs/pug-rest
         url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/CID/{code}/record/{type.upper()}?record_type=3d"
         logging.info(f"Fetching from '{url}'")
-        response = requests.get(url, verify=SSL_CHECK)
+        response = requests.get(url, verify=verify)
         response.raise_for_status()
         data = response.text.split("\n")
 
@@ -92,7 +92,7 @@ def _getpdb(code, type, host) -> list:
         # See: https://alphafold.ebi.ac.uk/api-docs
         url = f"https://alphafold.ebi.ac.uk/api/prediction/{code.upper()}"
         logging.info(f"Fetching from '{url}'")
-        response = requests.get(url, verify=SSL_CHECK)
+        response = requests.get(url, verify=verify)
         response.raise_for_status()
         meta = response.json()[0]
         if type.lower() == "cif":
@@ -104,7 +104,7 @@ def _getpdb(code, type, host) -> list:
         else:
             raise Exception(f"Invalid file type '{type}'")
         logging.info(f"Fetching from '{url}'")
-        response = requests.get(url, verify=SSL_CHECK)
+        response = requests.get(url, verify=verify)
         response.raise_for_status()
         data = response.text.split("\n")
     
@@ -114,7 +114,7 @@ def _getpdb(code, type, host) -> list:
     return data
 
 
-def getpdb(code, type=None, path=None):
+def getpdb(code, type=None, path=None, verify=True):
     """
     DESCRIPTION
         Retrieves molecular structure data from online databases (if possible). 
@@ -124,6 +124,7 @@ def getpdb(code, type=None, path=None):
         code = str: A unique structure identifier (PDB, CID, UniProt, ...)
         type = str: File format to fetch. See notes for more info. {default: None}
         path = str: File output directory. 'None' for current dir. {default: None}
+        verify = bool: Enable/disable SSL verification when making requests. {default: True}
     NOTES
         Supported file types depend on server. See DATABASE_HOSTS.
 
@@ -149,12 +150,12 @@ def getpdb(code, type=None, path=None):
             continue           
 
         try:
-            data = _getpdb(code, type, host)
+            data = _getpdb(code, type, host, verify)
             break
         except Exception as error:
             logging.warning(error)
     
-    # Error if no fetch was succesful
+    # Error if no fetch was successful
     if not data:
         logging.error(f"Could not fetch '{code}.{type}'")
         return
@@ -209,6 +210,10 @@ def main():
         "-d", "--dir", default=None,
         help="path to a directory that will store the files"
     )
+    parser.add_argument(
+        "--no-ssl-verify", dest="verify", action='store_true',
+        help="disable SSL verification when making requests"
+    )
     args = parser.parse_args()
     
     # Set up logging (i'm a geek)
@@ -220,9 +225,12 @@ def main():
     if args.verbose:
         log.setLevel(logging.INFO)
 
+    # Ignore warnings
+    warnings.filterwarnings("ignore")
+
     # Lets do this
     for code in args.code:
-        getpdb(code, args.type, args.dir)
+        getpdb(code, args.type, args.dir, args.verify)
         
     return
 

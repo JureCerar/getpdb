@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # 
-# Copyright (C) 2023 Jure Cerar
+# Copyright (C) 2023-2024 Jure Cerar
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,13 +26,13 @@ except:
 setup(
     name="getpdb",
     version = __version__,
-    description = "Retrives molecular structure data from online databases.",
+    description = "Retrieves molecular structure data from online databases.",
     author="Jure Cerar",
     url="https://github.com/JureCerar/getpdb",
     install_requires=["requests"],
     entry_points={
-        'console_scripts': [
-            'getpdb = getpdb:main',
+        "console_scripts": [
+            "getpdb = getpdb:main",
         ]
     },
 )
