@@ -32,6 +32,8 @@ __version__ = "0.2.0"
 FILE_DEFAULT_SMALL = "sdf"
 FILE_DEFAULT_LARGE = "cif"
 
+# TEST?
+
 # Supported databases and file types
 DATABASE_HOSTS = {
     "rcsb": ["pdb", "cif", "bcif", "xml"],
