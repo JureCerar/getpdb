@@ -1,3 +1,5 @@
+<img src="icon.png" alt="icon" width="200"/>
+
 # GetPDB
 
 Python script that retrieves molecular structure data from online databases (if possible).
